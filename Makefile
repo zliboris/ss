@@ -1,70 +1,85 @@
-# Kompajler i opcije
+# Kompajler i flagovi
 CXX := g++
-CXXFLAGS := -std=c++17 -Wall -Wextra -Iinc
+CXXFLAGS := -Wall -Wextra -std=c++17 -Iinc
 
-FLEX := flex
-BISON := bison
+# Flex/Bison alati
+LEX := flex
+YACC := bison
 
-# Fajlovi za leksičku i sintaksnu analizu
-LEX_SRC := misc/scanner.l
-YACC_SRC := misc/parser.y
-LEX_GEN := src/lex.yy.cpp
-YACC_GEN_CPP := src/parser.tab.cpp
-YACC_GEN_HPP := inc/parser.tab.hpp
-
-# Folderi
+# Direktorijumi
 SRC_DIR := src
 INC_DIR := inc
 OBJ_DIR := obj
+MISC_DIR := misc
 
-# Izvršni fajlovi
-EXEC_ASM := assembler
-EXEC_LNK := linker
-EXEC_EMU := emulator
+ASM_DIR := $(SRC_DIR)/assembler
+LNK_DIR := $(SRC_DIR)/linker
+EMU_DIR := $(SRC_DIR)/emulator
 
-# Izvorni fajlovi
-SRCS := $(wildcard $(SRC_DIR)/*.cpp)
-OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
+# Binari
+BIN_ASM := asembler
+BIN_LINK := linker
+BIN_EMU := emulator
 
-# Izvršne mete
-all: $(EXEC_ASM) $(EXEC_LNK) $(EXEC_EMU)
+# Flex/Bison fajlovi
+LEX_SRC := $(MISC_DIR)/lexer.l
+YACC_SRC := $(MISC_DIR)/parser.y
+LEX_OUT := $(ASM_DIR)/lex.yy.cpp
+YACC_OUT := $(ASM_DIR)/parser.tab.cpp
+YACC_HDR := $(SRC_DIR)/assembler/parser.tab.hpp
 
-# Flex i Bison generisanje
-$(LEX_GEN): $(LEX_SRC)
-	$(FLEX) -o $@ $<
+# Pronađi sve .cpp fajlove po komponentama
+ASM_SRC := $(wildcard $(ASM_DIR)/*.cpp)
+LNK_SRC := $(wildcard $(LNK_DIR)/*.cpp)
+EMU_SRC := $(wildcard $(EMU_DIR)/*.cpp)
 
-$(YACC_GEN_CPP) $(YACC_GEN_HPP): $(YACC_SRC)
-	$(BISON) -d -o $(YACC_GEN_CPP) $<
+# Objektni fajlovi (menjamo src -> obj)
+ASM_OBJ := $(patsubst $(SRC_DIR)/%, $(OBJ_DIR)/%, $(ASM_SRC:.cpp=.o))
+LNK_OBJ := $(patsubst $(SRC_DIR)/%, $(OBJ_DIR)/%, $(LNK_SRC:.cpp=.o))
+EMU_OBJ := $(patsubst $(SRC_DIR)/%, $(OBJ_DIR)/%, $(EMU_SRC:.cpp=.o))
 
-# Kompajliranje .cpp fajlova u .o
+# Dodaj parser/lexer objektne fajlove
+ASM_OBJ += $(OBJ_DIR)/assembler/parser.tab.o $(OBJ_DIR)/assembler/lex.yy.o
+
+# Targeti
+.PHONY: all clean
+
+all: $(BIN_ASM) $(BIN_LINK) $(BIN_EMU)
+
+# Binari
+$(BIN_ASM): $(ASM_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+$(BIN_LINK): $(LNK_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+$(BIN_EMU): $(EMU_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+# Kompajliraj svaki .cpp fajl u .o u obj/
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Asembler
-$(EXEC_ASM): $(OBJ_DIR)/assembler.o $(OBJ_DIR)/parser.tab.o $(OBJ_DIR)/lex.yy.o
-	$(CXX) $(CXXFLAGS) -o $@ $^
+# Flex i Bison
+$(LEX_OUT): $(LEX_SRC) $(YACC_HDR)
+	$(LEX) -o $@ $<
 
-# Linker
-$(EXEC_LNK): $(OBJ_DIR)/linker.o
-	$(CXX) $(CXXFLAGS) -o $@ $^
+$(YACC_OUT) $(YACC_HDR): $(YACC_SRC)
+	$(YACC) -d -o $(YACC_OUT) $<
 
-# Emulator
-$(EXEC_EMU): $(OBJ_DIR)/emulator.o
-	$(CXX) $(CXXFLAGS) -o $@ $^
+# Kompajliraj parser.tab.cpp
+$(OBJ_DIR)/assembler/parser.tab.o: $(YACC_OUT)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Posebno kompajliranje za flex i bison fajlove
-$(OBJ_DIR)/parser.tab.o: $(YACC_GEN_CPP) $(YACC_GEN_HPP)
-	@mkdir -p $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) -c $(YACC_GEN_CPP) -o $@
+# Kompajliraj lex.yy.cpp
+$(OBJ_DIR)/assembler/lex.yy.o: $(LEX_OUT)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/lex.yy.o: $(LEX_GEN)
-	@mkdir -p $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) -c $(LEX_GEN) -o $@
-
-# Clean
+# Čišćenje
 clean:
-	rm -rf $(OBJ_DIR) $(EXEC_ASM) $(EXEC_LNK) $(EXEC_EMU) \
-	       $(LEX_GEN) $(YACC_GEN_CPP) $(YACC_GEN_HPP)
+	rm -rf $(OBJ_DIR) $(BIN_ASM) $(BIN_LINK) $(BIN_EMU) \
+	       $(LEX_OUT) $(YACC_OUT) $(YACC_HDR)
 
-.PHONY: all clean
