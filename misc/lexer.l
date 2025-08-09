@@ -54,11 +54,15 @@ csrwr			{ return CSRWR;};
 %handler		{ yylval.type = HANDLER; return SREG;};
 %cause			{ yylval.type = CAUSE; return SREG;};
 
+\"[^"\n]*\" 		{ yytext[yyleng - 1] = '\0';
+			yylval.str = strdup(yytext + 1);
+    			return STRING;};
+
 ([a-zA-Z_][a-zA-Z0-9_]*)		{ yylval.str = strdup(yytext); return REC;};
 
 0x[0-9]+		{ yylval.num = strtoul(yytext, NULL, 0); return BROJ;};
 
-[0-9]+			{ yylval.num = atoi(yytext); return BROJ;};
+[-]{0,1}[0-9]+			{ yylval.num = atoi(yytext); return BROJ;};
 
 "+"			{ return PLUS;};
 "-"			{ return MINUS;};
