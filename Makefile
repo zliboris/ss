@@ -62,7 +62,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Flex i Bison
-$(LEX_OUT): $(LEX_SRC) $(YACC_HDR)
+$(LEX_OUT): $(LEX_SRC) 
 	$(LEX) -o $@ $<
 
 $(YACC_OUT) $(YACC_HDR): $(YACC_SRC)
