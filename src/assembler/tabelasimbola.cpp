@@ -1,7 +1,9 @@
 #include "../../inc/assembler/tabelasimbola.hpp"
 
+TabelaSimbola TabelaSimbola::simbol_table = TabelaSimbola();
+
 TabelaSimbola::TabelaSimbola(){
-	tabela.emplace_back(0,0,simbol::NOTYP,false,0,"");
+	tabela.emplace_back(0, 0, NOTYP, false, 0, "");
 }
 
 int TabelaSimbola::simbol_index(std::string name){
@@ -15,7 +17,7 @@ int TabelaSimbola::simbol_index(std::string name){
 uint32_t TabelaSimbola::simbol_value(std::string name, bool* defined){
 	int i = simbol_index(name);
 	if(i != -1){
-		if(tabela[i].Ndx == 0){
+		if(tabela[i].Ndx == 0 || tabela[i].type != SIM){
 			*defined = false;
 			return 0;
 		}
@@ -24,7 +26,7 @@ uint32_t TabelaSimbola::simbol_value(std::string name, bool* defined){
 			return tabela[i].value;
 		}
 	}
-	tabela.emplace_back(0,0,simbol::NOTYP,false,0,name);
+	tabela.emplace_back(0, 0, NOTYP, false, 0, name);
 	*defined = false;
 	return 0;
 }

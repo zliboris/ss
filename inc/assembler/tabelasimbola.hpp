@@ -8,12 +8,15 @@
 class TabelaSimbola {
 	public:
 
+	enum sim_tip {NOTYP = 0, SCTN = 1, SIM = 2};
+
+	static TabelaSimbola simbol_table;
+
 	int simbol_index(std::string name);
 
 	uint32_t simbol_value(std::string name, bool* defined);
 
 	struct simbol {
-		enum sim_tip {NOTYP = 0, SCTN = 1};
 		uint32_t value;
 		int size;
 		sim_tip type;
