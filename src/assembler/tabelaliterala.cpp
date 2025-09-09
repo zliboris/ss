@@ -3,7 +3,7 @@
 #include <algorithm>
 
 int TabelaLiterala::index_sim(std::string simbol){
-	for(literal_t l: tabela){
+	for(literal_t &l: tabela){
 		if(l.simbol && l.ime == simbol){ 
 			auto it = std::find(tabela.begin(),tabela.end(),l);
 			return std::distance(tabela.begin(), it);
@@ -13,7 +13,7 @@ int TabelaLiterala::index_sim(std::string simbol){
 }
 
 int TabelaLiterala::index_lit(uint32_t literal){
-	for(literal_t l: tabela){
+	for(literal_t &l: tabela){
 		if(!l.simbol && l.value == literal){ 
 			auto it = std::find(tabela.begin(),tabela.end(),l);
 			return std::distance(tabela.begin(), it);
@@ -23,11 +23,8 @@ int TabelaLiterala::index_lit(uint32_t literal){
 }
 
 int TabelaLiterala::insert_sim(std::string simbol){
-	bool defined = false;
-	tabela.emplace_back(true, simbol, TabelaSimbola::simbol_table.simbol_value(simbol, &defined));
-	if(!defined){
-		Trelokacija.add_rel((tabela.size() - 1) * 4, TabelaSimbola::simbol_table.simbol_index(simbol), 0);
-	}
+	tabela.emplace_back(true, simbol, 0);
+	Trelokacija.add_rel((tabela.size() - 1) * 4, simbol, 0);
 	return index_sim(simbol);
 }
 

@@ -1,6 +1,6 @@
 # Kompajler i flagovi
 CXX := g++
-CXXFLAGS := -Wall -Wextra -std=c++17 -Iinc
+CXXFLAGS := -w -Wall -Wextra -std=c++17 -Iinc
 
 # Flex/Bison alati
 LEX := flex
@@ -62,7 +62,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Flex i Bison
-$(LEX_OUT): $(LEX_SRC) 
+$(LEX_OUT): $(LEX_SRC) $(YACC_HDR)
 	$(LEX) -o $@ $<
 
 $(YACC_OUT) $(YACC_HDR): $(YACC_SRC)

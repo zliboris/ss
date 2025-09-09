@@ -1,7 +1,8 @@
 %{
-#include "../inc/assembler/assembler.hpp"
+#include "../inc/assembler/instructions.hpp"
 #include "parser.tab.hpp"
 int fileno(FILE *stream);
+int yylex(void);
 %}
 
 %%
@@ -60,7 +61,7 @@ csrwr			{ return CSRWR;};
 
 ([a-zA-Z_][a-zA-Z0-9_]*)		{ yylval.str = new std::string(yytext); return REC;};
 
-0x[0-9]+		{ yylval.num = strtoul(yytext, NULL, 0); return BROJ;};
+0x[0-9ABCDEF]+		{ yylval.num = strtoul(yytext, NULL, 0); return BROJ;};
 
 [-]{0,1}[0-9]+			{ yylval.num = atoi(yytext); return BROJ;};
 

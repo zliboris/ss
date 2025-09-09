@@ -1,76 +1,185 @@
 #include "../../inc/assembler/instructions.hpp"
 
-void insert_inst(uint32_t inst){
-	fajl->lista_sekcija.back().content.push_back((uint8_t)inst >> 24);
-	fajl->lista_sekcija.back().content.push_back((uint8_t)inst >> 16);
-	fajl->lista_sekcija.back().content.push_back((uint8_t)inst >> 8);
-	fajl->lista_sekcija.back().content.push_back((uint8_t)inst);
-	fajl->lista_sekcija.back().cur_offset += 4;
+void resolve_global(std::vector<std::string*> *simbols){
+	for(auto s : *simbols)
+	{
+		Assembler::assembler.simbol_table.global_simbol(*s);
+	}
+}
+void resolve_extern(std::vector<std::string*> *simbols){
+	for(auto s : *simbols)
+	{
+		Assembler::assembler.simbol_table.extern_simbol(*s);
+	}
+}
+void resolve_section(std::string* name){
+	Assembler::assembler.new_section(*name);
+}
+void resolve_word(std::vector<sim_or_lit> *sim_and_lit_list){
+	for(auto sl : *sim_and_lit_list){
+		if(sl.is_simbol){
+			Assembler::assembler.get_curr_section().add_word_simbol(*sl.simbol);
+		}
+		else {
+			Assembler::assembler.get_curr_section().add_word_literal(sl.literal);
+		}
+	}
+}
+void resolve_skip(uint32_t size){
+	Assembler::assembler.get_curr_section().skip(size);
+}
+void resolve_ascii(std::string *string){
+	Assembler::assembler.get_curr_section().ascii(*string);
+}
+void resolve_equ(std::string* simbol, std::vector<sim_or_lit_izraz> *izraz){}
+
+void resolve_label(std::string* labela){
+	Assembler::assembler.simbol_table.add_label(*labela);
 }
 
 void inst_halt(){
-	insert_inst(0x00000000);
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::HALT);
 }
 
 void inst_int(){
-	insert_inst(0x10000000);
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::INT);
 }
-void inst_iret()
-{
-	//pop pc, pop status
+void inst_iret(){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0111, (Sekcija::gpr) STATUS, Sekcija::SP, Sekcija::R0, 0b000000000100);
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0011, Sekcija::PC, Sekcija::SP, Sekcija::R0, 0b000000000100);
 }
 
-void inst_call_sym(char* labela){
-	insert_lit_ref(get_sim_offset(labela));
-	insert_inst(0x21F0000);
+void inst_call_sym(std::string* labela){
+	Assembler::assembler.get_curr_section().add_instruction_simbol(Sekcija::CALL, *labela, 0b0001, Sekcija::PC);
 }
-void inst_call_lit(uint32_t addr);
-void inst_ret();
+void inst_call_lit(uint32_t addr){
+	Assembler::assembler.get_curr_section().add_instruction_literal(Sekcija::CALL, addr, 0b0001, Sekcija::PC);
+}
+void inst_ret(){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0011, Sekcija::PC, Sekcija::SP, Sekcija::R0, 0b000000000100);
+}
 
-void inst_jmp_sym(char* labela);
-void inst_jmp_lit(uint32_t addr);
+void inst_jmp_sym(std::string* labela){
+	Assembler::assembler.get_curr_section().add_instruction_simbol(Sekcija::JMP, *labela, 0b1000, Sekcija::PC);
+}
+void inst_jmp_lit(uint32_t addr){
+	Assembler::assembler.get_curr_section().add_instruction_literal(Sekcija::JMP, addr, 0b1000, Sekcija::PC);
+}
 
-void inst_beq_sym(uint32_t reg1, uint32_t reg2, char* labela);
-void inst_beq_lit(uint32_t reg1, uint32_t reg2, char* addr);
+void inst_beq_sym(uint32_t reg1, uint32_t reg2, std::string* labela){
+	Assembler::assembler.get_curr_section().add_instruction_simbol(Sekcija::JMP, *labela, 0b1001, Sekcija::PC, (Sekcija::gpr) reg1, (Sekcija::gpr) reg2);
+}
+void inst_beq_lit(uint32_t reg1, uint32_t reg2, uint32_t addr){
+	Assembler::assembler.get_curr_section().add_instruction_literal(Sekcija::JMP, addr, 0b1001, Sekcija::PC, (Sekcija::gpr) reg1, (Sekcija::gpr) reg2);
+}
 
-void inst_bne_sym(uint32_t reg1, uint32_t reg2, char* labela);
-void inst_bne_lit(uint32_t reg1, uint32_t reg2, char* addr);
+void inst_bne_sym(uint32_t reg1, uint32_t reg2, std::string* labela){
+	Assembler::assembler.get_curr_section().add_instruction_simbol(Sekcija::JMP, *labela, 0b1010, Sekcija::PC, (Sekcija::gpr) reg1, (Sekcija::gpr) reg2);
+}
+void inst_bne_lit(uint32_t reg1, uint32_t reg2, uint32_t addr){
+	Assembler::assembler.get_curr_section().add_instruction_literal(Sekcija::JMP, addr, 0b1010, Sekcija::PC, (Sekcija::gpr) reg1, (Sekcija::gpr) reg2);
+}
 
-void inst_bgt_sym(uint32_t reg1, uint32_t reg2, char* labela);
-void inst_bgt_lit(uint32_t reg1, uint32_t reg2, char* addr);
+void inst_bgt_sym(uint32_t reg1, uint32_t reg2, std::string* labela){
+	Assembler::assembler.get_curr_section().add_instruction_simbol(Sekcija::JMP, *labela, 0b1011, Sekcija::PC, (Sekcija::gpr) reg1, (Sekcija::gpr) reg2);
+}
+void inst_bgt_lit(uint32_t reg1, uint32_t reg2, uint32_t addr){
+	Assembler::assembler.get_curr_section().add_instruction_literal(Sekcija::JMP, addr, 0b1011, Sekcija::PC, (Sekcija::gpr) reg1, (Sekcija::gpr) reg2);
+}
 
-void inst_push(uint32_t reg);
-void inst_pop(uint32_t reg);
+void inst_push(uint32_t reg){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::STOR, 0b0001, Sekcija::SP, Sekcija::R0, (Sekcija::gpr) reg, 0b100000000100);
+}
+void inst_pop(uint32_t reg){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0011, (Sekcija::gpr) reg, Sekcija::SP, Sekcija::R0, 0b000000000100);
+}
 
-void inst_xchg(uint32_t regS, uint32_t regD);
-void inst_add(uint32_t regS, uint32_t regD);
-void inst_sub(uint32_t regS, uint32_t regD);
-void inst_mul(uint32_t regS, uint32_t regD);
-void inst_div(uint32_t regS, uint32_t regD);
-void inst_not(uint32_t reg);
-void inst_and(uint32_t regS, uint32_t regD);
-void inst_or(uint32_t regS, uint32_t regD);
-void inst_xor(uint32_t regS, uint32_t regD);
-void inst_shl(uint32_t regS, uint32_t regD);
-void inst_shr(uint32_t regS, uint32_t regD);
+void inst_xchg(uint32_t regS, uint32_t regD){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::XCHG, 0b0000, Sekcija::R0, (Sekcija::gpr) regS, (Sekcija::gpr) regD);
+}
+void inst_add(uint32_t regS, uint32_t regD){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::ARTH, 0b0000, (Sekcija::gpr) regD, (Sekcija::gpr) regD, (Sekcija::gpr) regS);
+}
+void inst_sub(uint32_t regS, uint32_t regD){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::ARTH, 0b0001, (Sekcija::gpr) regD, (Sekcija::gpr) regD, (Sekcija::gpr) regS);
+}
+void inst_mul(uint32_t regS, uint32_t regD){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::ARTH, 0b0010, (Sekcija::gpr) regD, (Sekcija::gpr) regD, (Sekcija::gpr) regS);
+}
+void inst_div(uint32_t regS, uint32_t regD){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::ARTH, 0b0011, (Sekcija::gpr) regD, (Sekcija::gpr) regD, (Sekcija::gpr) regS);
+}
+void inst_not(uint32_t reg){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOGI, 0b0000, (Sekcija::gpr) reg, (Sekcija::gpr) reg, Sekcija::R0);
+}
+void inst_and(uint32_t regS, uint32_t regD){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOGI, 0b0001, (Sekcija::gpr) regD, (Sekcija::gpr) regD, (Sekcija::gpr) regS);
+}
+void inst_or(uint32_t regS, uint32_t regD){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOGI, 0b0010, (Sekcija::gpr) regD, (Sekcija::gpr) regD, (Sekcija::gpr) regS);
+}
+void inst_xor(uint32_t regS, uint32_t regD){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOGI, 0b0011, (Sekcija::gpr) regD, (Sekcija::gpr) regD, (Sekcija::gpr) regS);
+}
+void inst_shl(uint32_t regS, uint32_t regD){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::SHIF, 0b0000, (Sekcija::gpr) regD, (Sekcija::gpr) regD, (Sekcija::gpr) regS);
+}
+void inst_shr(uint32_t regS, uint32_t regD){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::SHIF, 0b0001, (Sekcija::gpr) regD, (Sekcija::gpr) regD, (Sekcija::gpr) regS);
+}
 
-void inst_ld_lit_vr(uint32_t reg, uint32_t lit_vr);
-void inst_ld_sim_vr(uint32_t reg, char* sim_vr);
-void inst_ld_lit_addr(uint32_t reg, uint32_t lit_addr);
-void inst_ld_sim_addr(uint32_t reg, char* sim_vr);
-void inst_ld_reg_vr(uint32_t reg, uint32_t reg_vr);
-void inst_ld_reg_addr(uint32_t reg, uint32_t reg_addr);
-void inst_ld_reg_lit_addr(uint32_t reg, reg_lit* reg_lit_addr);
-void inst_ld_reg_sim_addr(uint32_t reg, reg_sim* reg_sim_addr);
+void inst_ld_lit_vr(uint32_t reg, uint32_t lit_vr){
+	Assembler::assembler.get_curr_section().add_instruction_literal(Sekcija::LOAD, lit_vr, 0b0010, (Sekcija::gpr) reg, Sekcija::PC, Sekcija::R0);
+}
+void inst_ld_sim_vr(uint32_t reg, std::string* sim_vr){
+	Assembler::assembler.get_curr_section().add_instruction_simbol(Sekcija::LOAD, *sim_vr, 0b0010, (Sekcija::gpr) reg, Sekcija::PC, Sekcija::R0);
 
-void inst_st_lit_vr(uint32_t reg, uint32_t lit_vr);
-void inst_st_sim_vr(uint32_t reg, char* sim_vr);
-void inst_st_lit_addr(uint32_t reg, uint32_t lit_addr);
-void inst_st_sim_addr(uint32_t reg, char* sim_vr);
-void inst_st_reg_vr(uint32_t reg, uint32_t reg_vr);
-void inst_st_reg_addr(uint32_t reg, uint32_t reg_addr);
-void inst_st_reg_lit_addr(uint32_t reg, reg_lit* reg_lit_addr);
-void inst_st_reg_sim_addr(uint32_t reg, reg_sim* reg_sim_addr);
+}
+void inst_ld_lit_addr(uint32_t reg, uint32_t lit_addr){
+	Assembler::assembler.get_curr_section().add_instruction_literal(Sekcija::LOAD, lit_addr, 0b0010, (Sekcija::gpr) reg, Sekcija::PC, Sekcija::R0);
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0010, (Sekcija::gpr) reg, (Sekcija::gpr) reg, Sekcija::R0);
+}
+void inst_ld_sim_addr(uint32_t reg, std::string* sim_addr){
+	Assembler::assembler.get_curr_section().add_instruction_simbol(Sekcija::LOAD, *sim_addr, 0b0010, (Sekcija::gpr) reg, Sekcija::PC, Sekcija::R0);
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0010, (Sekcija::gpr) reg, (Sekcija::gpr) reg, Sekcija::R0);
+}
+void inst_ld_reg_vr(uint32_t reg, uint32_t reg_vr){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0001, (Sekcija::gpr) reg, (Sekcija::gpr) reg_vr, Sekcija::R0);
+}
+void inst_ld_reg_addr(uint32_t reg, uint32_t reg_addr){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0010, (Sekcija::gpr) reg, (Sekcija::gpr) reg_addr, Sekcija::R0);
+}
+void inst_ld_reg_lit_addr(uint32_t reg, reg_lit* reg_lit_addr){
+	if( reg_lit_addr->literal > 0xFFF) Assembler::assembler.error("Literal veci od 12 bita");
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0010, (Sekcija::gpr) reg, (Sekcija::gpr) reg_lit_addr->reg, Sekcija::R0, reg_lit_addr->literal);
+}
+void inst_ld_reg_sim_addr(uint32_t reg, reg_sim* reg_sim_addr){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0010, (Sekcija::gpr) reg, (Sekcija::gpr) reg_sim_addr->reg, Sekcija::R0);
+	Assembler::assembler.get_curr_section().back_patch_displacment_at_last(*reg_sim_addr->simbol);
+}
 
-void inst_csrrd(uint32_t reg, sreg sreg);
-void inst_csrwr(uint32_t reg, sreg sreg);
+void inst_st_lit_addr(uint32_t reg, uint32_t lit_addr){
+	Assembler::assembler.get_curr_section().add_instruction_literal(Sekcija::STOR, lit_addr, 0b0010, Sekcija::PC, Sekcija::R0, (Sekcija::gpr) reg);
+}
+void inst_st_sim_addr(uint32_t reg, std::string* sim_vr){
+	Assembler::assembler.get_curr_section().add_instruction_simbol(Sekcija::STOR, *sim_vr, 0b0010, Sekcija::PC, Sekcija::R0, (Sekcija::gpr) reg);
+}
+void inst_st_reg_addr(uint32_t reg, uint32_t reg_addr){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::STOR, 0b0000, (Sekcija::gpr) reg_addr, Sekcija::R0, (Sekcija::gpr) reg);
+}
+void inst_st_reg_lit_addr(uint32_t reg, reg_lit* reg_lit_addr){
+	if( reg_lit_addr->literal > 0xFFF) Assembler::assembler.error("Literal veci od 12 bita");
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::STOR, 0b0000, (Sekcija::gpr) reg_lit_addr->reg, Sekcija::R0, (Sekcija::gpr) reg, reg_lit_addr->literal);
+}
+void inst_st_reg_sim_addr(uint32_t reg, reg_sim* reg_sim_addr){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::STOR, 0b0000, (Sekcija::gpr) reg_sim_addr->reg, Sekcija::R0, (Sekcija::gpr) reg);
+	Assembler::assembler.get_curr_section().back_patch_displacment_at_last(*reg_sim_addr->simbol);
+}
+
+void inst_csrrd(uint32_t reg, sreg sreg){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0000, (Sekcija::gpr) reg, (Sekcija::gpr) sreg);
+}
+void inst_csrwr(uint32_t reg, sreg sreg){
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0100, (Sekcija::gpr) sreg, (Sekcija::gpr) reg);
+}
+

@@ -11,21 +11,25 @@ class Sekcija {
 
 	TabelaLiterala Tliterali;
 
-	struct machine_code {
+	struct binary {
 		bool is_instruction;
+		uint32_t size;
 		uint32_t value;
 		instrucion_code instruction;
 		uint8_t mode;
 		gpr RegA, RegB, RegC;
 		uint32_t disp;
 		int literal_index;
+		uint32_t t_offset;
 
-		machine_code(uint32_t value): 
-			is_instruction(false), value(value), literal_index(-1){};
-		machine_code(instrucion_code ic, uint8_t m, gpr a, gpr b, gpr c, uint32_t d) :
-			is_instruction(true), instruction(ic), mode(m), RegA(a), RegB(b), RegC(c), disp(d), literal_index(-1) {};
-		machine_code(instrucion_code ic, uint8_t m, gpr a, gpr b, gpr c, int lit_index) :
-			is_instruction(true), instruction(ic), mode(m), RegA(a), RegB(b), RegC(c), literal_index(lit_index), disp(0) {};
+		binary(uint32_t value, uint32_t off): 
+			is_instruction(false), size(4), value(value), literal_index(-1), t_offset(off) {};
+		binary(uint32_t value, uint32_t size, uint32_t off): 
+			is_instruction(false), size(size), value(value), literal_index(-1), t_offset(off) {};
+		binary(instrucion_code ic, uint8_t m, gpr a, gpr b, gpr c, uint32_t d, uint32_t off) :
+			is_instruction(true), size(4), instruction(ic), mode(m), RegA(a), RegB(b), RegC(c), disp(d), literal_index(-1), t_offset(off)  {};
+		binary(instrucion_code ic, uint8_t m, gpr a, gpr b, gpr c, int lit_index, uint32_t off) :
+			is_instruction(true), size(4), instruction(ic), mode(m), RegA(a), RegB(b), RegC(c), literal_index(lit_index), disp(0), t_offset(off)  {};
 	};
 
 	void add_instruction(instrucion_code ic, uint8_t mode = 0, gpr a = R0, gpr b = R0, gpr c = R0, uint32_t displacment = 0);
@@ -34,11 +38,38 @@ class Sekcija {
 
 	void add_instruction_simbol(instrucion_code ic ,std::string simbol, uint8_t mode = 0, gpr a = R0, gpr b = R0, gpr c = R0);
 
-	void add_word(uint32_t);
+	void add_word_literal(uint32_t);
 
-	std::vector<machine_code> content;
+	void add_word_simbol(std::string);
+
+	void back_patch_displacment_at_last(std::string);
+
+	void do_back_patch();
+
+	std::vector<std::pair<binary&,std::string>> back_patches;
+
+	void skip(uint32_t);
+
+	void ascii(std::string string);
+
+	std::vector<uint8_t> get_binary();
+
+	TabelaRelokacija& get_relokacije();
+
+	void fix_relokacije();
+
+	TabelaRelokacija Trelokacija;
+
+	std::vector<binary> content;
+
+	uint32_t offset;
 	
 	std::string name;
 
+	Sekcija(std::string name) : name(name), offset(0) {Tliterali.section_name = name; Trelokacija.section_name = name;}
+
 };
+
+std::ostream& operator<<(std::ostream& os, Sekcija& s);
+
 #endif

@@ -27,11 +27,20 @@ class TabelaLiterala {
 		std::string ime;
 		uint32_t value;
 		literal_t(bool s, std::string i, uint32_t v) : simbol(s), ime(i), value(v) {}
+		bool operator==(const literal_t& lt){
+			if(simbol == lt.simbol && ime == lt.ime && value == lt.value) return true;
+			return false;
+		}
 	};
 
 	TabelaRelokacija Trelokacija;
 
+	std::string section_name;
+
 	std::vector<literal_t> tabela;
+
+	TabelaLiterala(){Trelokacija.section_name = section_name;}
 };
+
 
 #endif
