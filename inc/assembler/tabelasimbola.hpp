@@ -6,6 +6,7 @@
 #include <vector>
 
 #define UND ""
+#define EQU_SIM " "
 
 class TabelaSimbola {
 	public:
@@ -16,6 +17,8 @@ class TabelaSimbola {
 
 	uint32_t simbol_value(std::string name, bool* defined);
 
+	bool simbol_exists(std::string name);
+
 	void global_simbol(std::string name);
 
 	void extern_simbol(std::string name);
@@ -23,6 +26,10 @@ class TabelaSimbola {
 	void add_section(std::string name);
 
 	void add_label(std::string name);
+
+	void add_simbol(std::string name);
+
+	void add_simbol_value(std::string name, uint32_t value);
 
 	void sortiraj();
 

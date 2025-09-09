@@ -46,6 +46,12 @@ ASM_OBJ += $(OBJ_DIR)/assembler/parser.tab.o $(OBJ_DIR)/assembler/lex.yy.o
 
 all: $(BIN_ASM) $(BIN_LINK) $(BIN_EMU)
 
+asm: $(BIN_ASM)
+
+link: $(BIN_LINK)
+
+emu: $(BIN_EMU)
+
 # Binari
 $(BIN_ASM): $(ASM_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^

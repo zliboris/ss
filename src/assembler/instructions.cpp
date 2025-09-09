@@ -1,5 +1,45 @@
 #include "../../inc/assembler/instructions.hpp"
 
+void Assembler::add_equ(std::string *simbol, std::vector<sim_or_lit_izraz> *izraz){
+	equ_izrazi.push_back({*simbol, izraz});
+	Assembler::assembler.simbol_table.add_simbol(*simbol);
+}
+
+void Assembler::calculate_equ(){
+	int n = equ_izrazi.size();
+	for(int i = 0; i < n && equ_izrazi.size() > 0; i++)
+	{
+		for(auto it = equ_izrazi.begin(); it != equ_izrazi.end(); )
+		{
+			uint32_t value = 0;
+			bool failed = false;
+			for(auto elem : *it->second)
+			{
+				if(elem.is_simbol){
+					bool defined = false;
+					uint32_t sim_value = simbol_table.simbol_value(*elem.simbol, &defined);
+					if(!defined){failed = true; break;}
+					if(elem.plus) value += sim_value;
+					else value -= sim_value;
+
+				}
+				else {
+					if(elem.plus) value += elem.literal;
+					else value -= elem.literal;
+				}
+
+			}
+			if(!failed){
+				simbol_table.add_simbol_value(it->first,value);
+				equ_izrazi.erase(it);
+			}
+			else it++;
+		}
+	}
+	if(equ_izrazi.size() > 0) Assembler::assembler.error("Simbole u equ direktivama nije moguce definisati");
+
+}
+
 void resolve_global(std::vector<std::string*> *simbols){
 	for(auto s : *simbols)
 	{
@@ -31,7 +71,10 @@ void resolve_skip(uint32_t size){
 void resolve_ascii(std::string *string){
 	Assembler::assembler.get_curr_section().ascii(*string);
 }
-void resolve_equ(std::string* simbol, std::vector<sim_or_lit_izraz> *izraz){}
+void resolve_equ(std::string* simbol, std::vector<sim_or_lit_izraz> *izraz){
+	Assembler::assembler.add_equ(simbol, izraz);
+	Assembler::assembler.simbol_table.add_simbol(*simbol);
+}
 
 void resolve_label(std::string* labela){
 	Assembler::assembler.simbol_table.add_label(*labela);

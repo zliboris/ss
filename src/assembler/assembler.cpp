@@ -14,6 +14,7 @@ std::ostream& operator<<(std::ostream& os, Assembler& assm){
 }
 
 void Assembler::finish_assembly(){
+	Assembler::assembler.calculate_equ();
 	for(auto &sec: Assembler::assembler.sekcije){
 		sec.do_back_patch();
 		sec.Tliterali.Trelokacija.add_sekcija_offset(sec.offset);

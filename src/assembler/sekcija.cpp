@@ -1,17 +1,8 @@
 #include "../../inc/assembler/sekcija.hpp"
 #include "../../inc/assembler/assembler.hpp"
-#include <iomanip>
+#include "../../inc/assembler/hex_print.hpp"
 #include <algorithm>
 
-std::string to_hex(uint8_t value) {
-    std::ostringstream oss;
-    oss << std::setw(2)        // širina = 2 cifre
-        << std::setfill('0')   // popuni nulama
-        << std::hex
-        << std::nouppercase    // koristi mala slova a–f
-        << static_cast<int>(value); // cast jer bi se uint8_t ispisao kao char
-    return oss.str();
-}
 
 void Sekcija::add_instruction(instrucion_code ic, uint8_t mode, gpr a, gpr b, gpr c, uint32_t displacment){
 	content.emplace_back(ic,mode,a,b,c,displacment, offset);
@@ -122,7 +113,7 @@ std::ostream& operator<<(std::ostream& os, Sekcija& s){
 	os << "#." << s.name << std::endl;
 	int i = 0;
 	for(auto &b: s.get_binary()){
-		os << to_hex(b);
+		os << to_hex_2(b);
 		if(i == 3){
 			os << '\t';
 			i++;

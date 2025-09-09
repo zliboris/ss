@@ -6,35 +6,6 @@
 #include "assembler.hpp"
     
 
-enum sreg {STATUS = 0, HANDLER = 1, CAUSE = 2};
-
-struct reg_lit {
-	uint32_t reg;
-	uint32_t literal;
-};
-
-struct reg_sim {
-	uint32_t reg;
-	std::string* simbol;
-};
-
-struct sim_or_lit{
-	bool is_simbol;
-	std::string* simbol;
-	uint32_t literal;
-	sim_or_lit(std::string* s): is_simbol(true), simbol(s){}
-	sim_or_lit(uint32_t l): is_simbol(false), literal(l){}
-};
-
-struct sim_or_lit_izraz{
-	bool is_simbol;
-	bool plus;
-	std::string* simbol;
-	uint32_t literal;
-	sim_or_lit_izraz(std::string* s, bool p): is_simbol(true), simbol(s), plus(p){}
-	sim_or_lit_izraz(uint32_t l, bool p): is_simbol(false), literal(l), plus(p){}
-};
-
 void resolve_global(std::vector<std::string*> *simbols);
 void resolve_extern(std::vector<std::string*> *simbols);
 void resolve_section(std::string* name);

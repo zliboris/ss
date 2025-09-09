@@ -1,5 +1,6 @@
 #include "../../inc/assembler/tabelasimbola.hpp"
 #include "../../inc/assembler/assembler.hpp"
+#include "../../inc/assembler/hex_print.hpp"
 
 #include <algorithm>
 
@@ -64,6 +65,24 @@ void TabelaSimbola::add_label(std::string name){
 	}
 }
 
+void TabelaSimbola::add_simbol(std::string name){
+	int i = simbol_index(name);
+	if(i == -1){
+		tabela.emplace_back(0, NOTYP, false, UND, name);
+	}
+}
+
+void TabelaSimbola::add_simbol_value(std::string name, uint32_t value){
+	int i = simbol_index(name);
+	if(i == -1){
+		tabela.emplace_back(value, NOTYP, false, EQU_SIM, name);
+	}
+	else{
+		tabela[i].value = value;
+		tabela[i].section = EQU_SIM;
+	}
+}
+
 void TabelaSimbola::sortiraj(){
 	std::sort(tabela.begin(), tabela.end());
 	tabela.insert(tabela.begin(), {0,NOTYP,false,UND,UND,});
@@ -71,10 +90,10 @@ void TabelaSimbola::sortiraj(){
 
 std::ostream& operator<<(std::ostream& os, TabelaSimbola& ts){
 	os << "#.symtab\n";
-	os << "Num\tValue\tType\tBind\tSection\tName\n";
+	os << "Num\tValue\t\tType\tBind\tSection\tName\n";
 	int i=0;
 	for(auto &sim: ts.tabela){
-		os << i++ << ':' << '\t' << sim.value << '\t';
+		os << i++ << ':' << '\t' << to_hex_8(sim.value) << '\t';
 		switch(sim.type){
 			case TabelaSimbola::NOTYP : 
 				os << "NOTYP";
