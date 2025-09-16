@@ -4,7 +4,7 @@
 #include <iostream>
 #include <sstream>
 
-#define OUTPUT true
+#define OUTPUT false
 
 class ToggleOstream {
     static std::ostream& real_out;

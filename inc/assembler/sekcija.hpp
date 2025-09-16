@@ -58,6 +58,8 @@ class Sekcija {
 
 	void fix_relokacije();
 
+	uint32_t get_total_size(){return offset + Tliterali.tabela.size();}
+
 	TabelaRelokacija Trelokacija;
 
 	std::vector<binary> content;

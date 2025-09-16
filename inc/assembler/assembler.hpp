@@ -48,9 +48,20 @@ class Assembler {
 		sekcije.emplace_back(name);
 	}
 
-	Sekcija& get_curr_section(){return sekcije.back();}
+	Sekcija& get_curr_section(){
+		if(!sekcije.empty()) return sekcije.back();
+		assembler.error("Undefined behaviour");
+		return sekcije.back();
+	}
 
 	void finish_assembly();
+
+	uint32_t get_section_size(std::string section){
+		for(auto s: sekcije){
+			if(s.name == section) return s.get_total_size();
+		}
+		return 0;
+	}
 
 	void error(std::string msg);
 

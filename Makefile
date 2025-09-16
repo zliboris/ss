@@ -89,3 +89,5 @@ clean:
 	rm -rf $(OBJ_DIR) $(BIN_ASM) $(BIN_LINK) $(BIN_EMU) \
 	       $(LEX_OUT) $(YACC_OUT) $(YACC_HDR)
 
+runa: all
+	cd ./testovi_sa_sajta/nivo-a && ./start.sh

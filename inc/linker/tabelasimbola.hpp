@@ -6,34 +6,13 @@
 #include <vector>
 
 #define UND ""
-#define EQU_SIM " "
-
-class Assembler;
 
 class TabelaSimbola {
 	public:
 
 	enum sim_tip {NOTYP = 1, SCTN = 0};
 
-	int simbol_index(std::string name);
-
-	uint32_t simbol_value(std::string name, bool* defined);
-
-	bool simbol_exists(std::string name);
-
-	void global_simbol(std::string name);
-
-	void extern_simbol(std::string name);
-
-	void add_section(std::string name);
-
-	void add_label(std::string name);
-
-	void add_simbol(std::string name, std::string sekcija);
-
-	void add_simbol_value(std::string name, uint32_t value);
-
-	void sortiraj();
+	void add_simbol(uint32_t val, sim_tip tip, bool glob, std::string sekcija, std::string simbol){tabela.emplace_back(val,tip,glob,sekcija,simbol);}
 
 	struct simbol {
 		uint32_t value;
@@ -47,8 +26,9 @@ class TabelaSimbola {
 
 	std::vector<simbol> tabela;
 
-	TabelaSimbola();
 };
+
+std::istream& operator>>(std::istream& is, TabelaSimbola& ts);
 
 std::ostream& operator<<(std::ostream& os, TabelaSimbola& ts);
 

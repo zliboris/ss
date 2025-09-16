@@ -1,2 +1,9 @@
 testovi_sa_sajta/
 obj/
+./asembler
+./emulator
+./linker
+*.o
+src/assembler/lex.yy.cpp
+src/assembler/parser.tab.cpp
+src/assembler/parser.tab.hpp

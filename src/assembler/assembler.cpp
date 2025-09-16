@@ -20,6 +20,11 @@ void Assembler::finish_assembly(){
 		sec.Tliterali.Trelokacija.add_sekcija_offset(sec.offset);
 		sec.fix_relokacije();
 	}
+	for(auto &s: Assembler::assembler.simbol_table.tabela){
+		if(s.type == TabelaSimbola::SCTN){
+			s.value = get_section_size(s.name);
+		}
+	}
 	Assembler::assembler.simbol_table.sortiraj();
 }
 

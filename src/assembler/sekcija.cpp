@@ -73,10 +73,10 @@ std::vector<uint8_t> Sekcija::get_binary(){
 			if(b.literal_index != -1){
 				b.disp = offset - (b.t_offset + 4) + b.literal_index * 4;
 			}
-			rtn.push_back((uint8_t) (((b.instruction & 0xf) << 4) | (b.mode & 0xf)));
-			rtn.push_back((uint8_t) ((b.RegA & 0xf) << 4 | (b.RegB & 0xf)));
-			rtn.push_back((uint8_t) (((b.RegC & 0xf) << 4) | ((b.disp & 0xf00) >> 1 * 8)));
 			rtn.push_back((uint8_t) (b.disp & 0xffu));
+			rtn.push_back((uint8_t) (((b.RegC & 0xf) << 4) | ((b.disp & 0xf00) >> 1 * 8)));
+			rtn.push_back((uint8_t) ((b.RegA & 0xf) << 4 | (b.RegB & 0xf)));
+			rtn.push_back((uint8_t) (((b.instruction & 0xf) << 4) | (b.mode & 0xf)));
 		}
 		else{
 			uint32_t mask = 0xFF;
@@ -86,10 +86,10 @@ std::vector<uint8_t> Sekcija::get_binary(){
 		}
 	}
 	for(auto &lit: Tliterali.tabela){
-		rtn.push_back((uint8_t) ((lit.value & 0xff000000u) >> (3 * 8)));
-		rtn.push_back((uint8_t) ((lit.value & 0x00ff0000u) >> (2 * 8)));
-		rtn.push_back((uint8_t) ((lit.value & 0x0000ff00u) >> (1 * 8)));
 		rtn.push_back((uint8_t) ((lit.value & 0x000000ffu) >> (0 * 8)));
+		rtn.push_back((uint8_t) ((lit.value & 0x0000ff00u) >> (1 * 8)));
+		rtn.push_back((uint8_t) ((lit.value & 0x00ff0000u) >> (2 * 8)));
+		rtn.push_back((uint8_t) ((lit.value & 0xff000000u) >> (3 * 8)));
 	}
 	
 	return rtn;

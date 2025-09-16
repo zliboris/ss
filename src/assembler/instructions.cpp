@@ -2,7 +2,7 @@
 
 void Assembler::add_equ(std::string *simbol, std::vector<sim_or_lit_izraz> *izraz){
 	equ_izrazi.push_back({*simbol, izraz});
-	Assembler::assembler.simbol_table.add_simbol(*simbol);
+	Assembler::assembler.simbol_table.add_simbol(*simbol, Assembler::assembler.get_curr_section().name);
 }
 
 void Assembler::calculate_equ(){
@@ -73,7 +73,6 @@ void resolve_ascii(std::string *string){
 }
 void resolve_equ(std::string* simbol, std::vector<sim_or_lit_izraz> *izraz){
 	Assembler::assembler.add_equ(simbol, izraz);
-	Assembler::assembler.simbol_table.add_simbol(*simbol);
 }
 
 void resolve_label(std::string* labela){
