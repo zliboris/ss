@@ -163,18 +163,18 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		out << linked_hex;
+		out << linked_hex << std::endl;
 	}
 	else{
-		out << linked_files;
+		out << linked_files << std::endl;
 	}
 	
 
     	for(auto elf: input_elfs){
-    		std::cout << elf;
+    		//std::cout << elf;
     	}
 
-	std::cout << linked_files;
+	//std::cout << linked_files;
 
 	return 0;
 }
