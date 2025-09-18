@@ -61,7 +61,7 @@ csrwr			{ return CSRWR;};
 
 ([a-zA-Z_][a-zA-Z0-9_]*)		{ yylval.str = new std::string(yytext); return REC;};
 
-0x[0-9ABCDEF]+		{ yylval.num = strtoul(yytext, NULL, 0); return BROJ;};
+0x[0-9ABCDEFabcdef]+		{ yylval.num = strtoul(yytext, NULL, 0); return BROJ;};
 
 [-]{0,1}[0-9]+			{ yylval.num = atoi(yytext); return BROJ;};
 

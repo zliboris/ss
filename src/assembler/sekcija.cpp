@@ -80,7 +80,7 @@ std::vector<uint8_t> Sekcija::get_binary(){
 		}
 		else{
 			uint32_t mask = 0xFF;
-			for(int i = b.size - 1; i >= 0; i--){
+			for(int i = 0; i < b.size; i++){
 				rtn.push_back((uint8_t) ((mask << i * 8) & b.value) >> i * 8);
 			}
 		}

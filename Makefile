@@ -88,17 +88,17 @@ $(OBJ_DIR)/assembler/lex.yy.o: $(LEX_OUT)
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_ASM) $(BIN_LINK) $(BIN_EMU) \
 	       $(LEX_OUT) $(YACC_OUT) $(YACC_HDR) \
-	       testovi_sa_sajta/nivo-c/*.o \
-	       testovi_sa_sajta/nivo-b/*.o \
-	       testovi_sa_sajta/nivo-a/*.o \
-	       testovi_sa_sajta/nivo-c/*.hex \
-	       testovi_sa_sajta/nivo-b/*.hex \
-	       testovi_sa_sajta/nivo-a/*.hex \
+	       testovi/nivo-c/*.o \
+	       testovi/nivo-b/*.o \
+	       testovi/nivo-a/*.o \
+	       testovi/nivo-c/*.hex \
+	       testovi/nivo-b/*.hex \
+	       testovi/nivo-a/*.hex \
 	       *.out 
 
 runa: all
-	cd ./testovi_sa_sajta/nivo-a && ./start.sh
+	cd ./testovi/nivo-a && ./start.sh
 runb: all
-	cd ./testovi_sa_sajta/nivo-b && ./start.sh
+	cd ./testovi/nivo-b && ./start.sh
 runc: all
-	cd ./testovi_sa_sajta/nivo-c && ./start.sh
+	cd ./testovi/nivo-c && ./start.sh

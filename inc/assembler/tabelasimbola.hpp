@@ -36,13 +36,28 @@ class TabelaSimbola {
 
 	void sortiraj();
 
+	void sad_postoji(std::string name){int i; if((i = simbol_index(name)) != -1) tabela[i].exists = true;}
+
+	bool da_li_postoji(std::string name){
+		int i; 
+		if((i = simbol_index(name)) == -1) return false;
+		return tabela[i].exists;
+	}
+
+	bool da_li_je_lokalan(std::string name){
+		int i; 
+		if((i = simbol_index(name)) == -1) return false;
+		return !tabela[i].global;
+	}
+
 	struct simbol {
 		uint32_t value;
 		sim_tip type;
 		bool global;
 		std::string section;
 		std::string name;
-		simbol(uint32_t v, sim_tip t, bool g, std::string N, std::string n) : value(v), type(t), global(g), section(N), name(n) {}
+		bool exists;
+		simbol(uint32_t v, sim_tip t, bool g, std::string N, std::string n) : value(v), type(t), global(g), section(N), name(n), exists(false) {}
 		bool operator<(simbol s) { return type < s.type;}
 	};
 

@@ -18,7 +18,10 @@ void Assembler::calculate_equ(){
 				if(elem.is_simbol){
 					bool defined = false;
 					uint32_t sim_value = simbol_table.simbol_value(*elem.simbol, &defined);
-					if(!defined){failed = true; break;}
+					if(!simbol_table.da_li_postoji(*elem.simbol)){
+						failed = true; 
+						break;
+					}
 					if(elem.plus) value += sim_value;
 					else value -= sim_value;
 
@@ -32,6 +35,7 @@ void Assembler::calculate_equ(){
 			if(!failed){
 				simbol_table.add_simbol_value(it->first,value);
 				simbol_table.promeni_u_sim(it->first);
+				simbol_table.sad_postoji(it->first);
 				equ_izrazi.erase(it);
 			}
 			else it++;
@@ -78,6 +82,7 @@ void resolve_equ(std::string* simbol, std::vector<sim_or_lit_izraz> *izraz){
 
 void resolve_label(std::string* labela){
 	Assembler::assembler.simbol_table.add_label(*labela);
+	Assembler::assembler.simbol_table.sad_postoji(*labela);
 }
 
 void inst_halt(){
@@ -88,8 +93,8 @@ void inst_int(){
 	Assembler::assembler.get_curr_section().add_instruction(Sekcija::INT);
 }
 void inst_iret(){
-	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0111, (Sekcija::gpr) STATUS, Sekcija::SP, Sekcija::R0, 0b000000000100);
-	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0011, Sekcija::PC, Sekcija::SP, Sekcija::R0, 0b000000000100);
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0110, (Sekcija::gpr) STATUS, Sekcija::SP, Sekcija::R0, 0x4);
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0011, Sekcija::PC, Sekcija::SP, Sekcija::R0, 0x8);
 }
 
 void inst_call_sym(std::string* labela){
@@ -99,7 +104,7 @@ void inst_call_lit(uint32_t addr){
 	Assembler::assembler.get_curr_section().add_instruction_literal(Sekcija::CALL, addr, 0b0001, Sekcija::PC);
 }
 void inst_ret(){
-	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0011, Sekcija::PC, Sekcija::SP, Sekcija::R0, 0b000000000100);
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0011, Sekcija::PC, Sekcija::SP, Sekcija::R0, 0x4);
 }
 
 void inst_jmp_sym(std::string* labela){
@@ -131,10 +136,10 @@ void inst_bgt_lit(uint32_t reg1, uint32_t reg2, uint32_t addr){
 }
 
 void inst_push(uint32_t reg){
-	Assembler::assembler.get_curr_section().add_instruction(Sekcija::STOR, 0b0001, Sekcija::SP, Sekcija::R0, (Sekcija::gpr) reg, 0b100000000100);
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::STOR, 0b0001, Sekcija::SP, Sekcija::R0, (Sekcija::gpr) reg, 0xffc);
 }
 void inst_pop(uint32_t reg){
-	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0011, (Sekcija::gpr) reg, Sekcija::SP, Sekcija::R0, 0b000000000100);
+	Assembler::assembler.get_curr_section().add_instruction(Sekcija::LOAD, 0b0011, (Sekcija::gpr) reg, Sekcija::SP, Sekcija::R0, 0x4);
 }
 
 void inst_xchg(uint32_t regS, uint32_t regD){

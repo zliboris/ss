@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
 					exit(1);
 				}
 				uint32_t value = linked_files.symtab.tabela[index].value + relokacija.addend;
-				linked_hex.hex_sec[i].bytes[relokacija.offset]     = ((value & 0x000000ffu) >> (0 * 8));	
+				linked_hex.hex_sec[i].bytes[relokacija.offset + 0] = ((value & 0x000000ffu) >> (0 * 8));	
 				linked_hex.hex_sec[i].bytes[relokacija.offset + 1] = ((value & 0x0000ff00u) >> (1 * 8));	
 				linked_hex.hex_sec[i].bytes[relokacija.offset + 2] = ((value & 0x00ff0000u) >> (2 * 8));	
 				linked_hex.hex_sec[i].bytes[relokacija.offset + 3] = ((value & 0xff000000u) >> (3 * 8));	
