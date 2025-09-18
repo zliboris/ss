@@ -32,16 +32,21 @@ void Sekcija::add_word_simbol(std::string simbol){
 }
 
 void Sekcija::back_patch_displacment_at_last(std::string simbol){
-	back_patches.emplace_back(content.back(),simbol);
+	back_patches.emplace_back(content.back().t_offset,simbol);
 }
 
 void Sekcija::do_back_patch(){
-	for(auto bp : back_patches){
+	for(auto &bp : back_patches){
 		bool defined = false;
 		uint32_t sim_val = Assembler::assembler.simbol_table.simbol_value(bp.second, &defined);
 		if(!defined) Assembler::assembler.error("Simbol nije definisan");
 		if(sim_val > 0xFFF) Assembler::assembler.error("Vrednost simbola veca od 12 bita");
-		bp.first.disp = sim_val;
+		for(auto &bin: content){
+			if(bin.t_offset == bp.first){
+				bin.disp = sim_val;
+				break;
+			}
+		}
 	}
 }
 
@@ -79,9 +84,33 @@ std::vector<uint8_t> Sekcija::get_binary(){
 			rtn.push_back((uint8_t) (((b.instruction & 0xf) << 4) | (b.mode & 0xf)));
 		}
 		else{
-			uint32_t mask = 0xFF;
-			for(int i = 0; i < b.size; i++){
-				rtn.push_back((uint8_t) ((mask << i * 8) & b.value) >> i * 8);
+			if(b.size == 4){
+				rtn.push_back((uint8_t) ((b.value & 0x000000ffu) >> (0 * 8)));
+				rtn.push_back((uint8_t) ((b.value & 0x0000ff00u) >> (1 * 8)));
+				rtn.push_back((uint8_t) ((b.value & 0x00ff0000u) >> (2 * 8)));
+				rtn.push_back((uint8_t) ((b.value & 0xff000000u) >> (3 * 8)));
+
+			}
+			else if (b.size == 3){
+				rtn.push_back((uint8_t) ((b.value & 0x000000ffu) >> (0 * 8)));
+				rtn.push_back((uint8_t) ((b.value & 0x0000ff00u) >> (1 * 8)));
+				rtn.push_back((uint8_t) ((b.value & 0x00ff0000u) >> (2 * 8)));
+
+			}
+			else if (b.size == 2){
+				rtn.push_back((uint8_t) ((b.value & 0x000000ffu) >> (0 * 8)));
+				rtn.push_back((uint8_t) ((b.value & 0x0000ff00u) >> (1 * 8)));
+
+			}
+			else if (b.size == 1){
+				rtn.push_back((uint8_t) ((b.value & 0x000000ffu) >> (0 * 8)));
+
+			}
+			else{
+				uint32_t mask = 0xFF;
+				for(int i = 0; i < b.size; i++){
+					rtn.push_back((uint8_t) ((mask << i * 8) & b.value) >> i * 8);
+				}
 			}
 		}
 	}

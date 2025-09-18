@@ -46,7 +46,7 @@ class Sekcija {
 
 	void do_back_patch();
 
-	std::vector<std::pair<binary&,std::string>> back_patches;
+	std::vector<std::pair<uint32_t,std::string>> back_patches;
 
 	void skip(uint32_t);
 
