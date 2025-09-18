@@ -3,6 +3,7 @@ extern FILE* yyin;
 int yyparse();
 #include <fstream>
 #include <cstring> 
+#include <unistd.h>
 
 Assembler Assembler::assembler;
 
@@ -34,27 +35,49 @@ void Assembler::error(std::string msg){
 }
 
 int main(int argc, char *argv[]){
+	std::string inputFile;
+	std::string outputFile = "UND";
 
-	char* file;
-	if(strcmp(argv[1],"-o") == 0) file = argv[3];
-	else file = argv [1];
-	FILE* f = fopen(file,"r");
+    	int opt;
+    	while ((opt = getopt(argc, argv, "o:")) != -1) {
+        	switch (opt) {
+        	case 'o':
+            		outputFile = optarg;
+            		break;
+        	case '?':
+            		std::cerr << "Nepoznata opcija ili nedostaje argument." << std::endl;
+            		return 1;
+        	}
+    	}
+
+    	if (optind < argc) {
+        	inputFile = argv[optind];
+    	} else {
+        	std::cerr << "Greška: nije zadat ulazni fajl." << std::endl;
+        	return 1;
+    	}
+
+	if(outputFile == "UND"){
+		outputFile = inputFile;
+		outputFile.back() = 'o';
+	}
+
+	FILE* f = fopen(inputFile.c_str(), "r");
 	yyin = f;
 	yyparse();
 	fclose(f);
 	Assembler::assembler.finish_assembly();
 
-	std::string outf;
-	if(strcmp(argv[1],"-o") == 0)outf = argv[2];
-	else {
-		outf = argv[1];
-		outf.back() = 'o';
+	std::ofstream out(outputFile);
+
+	if(!out.is_open()){
+		std::cerr << "Greska pri otvaranju fajla" << std::endl;
+		return 1;
 	}
-	std::ofstream out(outf);
 	
 	out << Assembler::assembler;
 	
-	std::cout << Assembler::assembler;
+	//std::cout << Assembler::assembler;
 
 	return 0;
 }

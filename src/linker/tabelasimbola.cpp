@@ -1,63 +1,64 @@
-#include "../../inc/assembler/tabelasimbola.hpp"
-#include "../../inc/assembler/assembler.hpp"
-#include "../../inc/assembler/hex_print.hpp"
+#include "../../inc/linker/tabelasimbola.hpp"
+#include "../../inc/linker/hex_print.hpp"
 
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <string>
 #include <iomanip>
+#include <algorithm>
 
 
-// funkcija koja parsira hex string ("1A") u broj
-uint8_t from_hex_8(const std::string& s) {
-    return static_cast<uint8_t>(std::stoi(s, nullptr, 16));
+
+int TabelaSimbola::simbol_index(std::string name){
+	for(uint i = 0; i < tabela.size(); i++)
+	{
+		if(tabela[i].name == name) return i;
+	}
+	return -1;
 }
 
-std::istream& operator>>(std::istream& is, TabelaSimbola& ts) {
-    ts.tabela.clear();
-
-    std::string line;
-
-    // preskoči header linije
-    std::getline(is, line); // "#.symtab"
-    std::getline(is, line); // "Num ..."
-
-    while (std::getline(is, line)) {
-        if (line.empty()) continue;
-
-        std::istringstream iss(line);
-
-        int index;
-        char colon;
-        std::string value_hex, type_str, bind_str, section_str, name_str;
-
-        iss >> index >> colon >> value_hex >> type_str >> bind_str >> section_str >> name_str;
-
-        if (!iss) continue; // preskoči ako parsiranje nije uspelo
-
-	TabelaSimbola::simbol s(0,TabelaSimbola::NOTYP,false,"","");
-        s.value = from_hex_8(value_hex);
-
-        if (type_str == "NOTYP") s.type = TabelaSimbola::NOTYP;
-        else if (type_str == "SCTN") s.type = TabelaSimbola::SCTN;
-
-        s.global = (bind_str == "GLOB");
-        s.section = (section_str == "UND" ? "" : section_str);
-        s.name = name_str;
-
-        ts.tabela.push_back(s);
-    }
-
-    return is;
+void TabelaSimbola::load_simbol(uint32_t val, TabelaSimbola::sim_tip tip, bool glob, int Ndx, std::string simbol){
+	tabela.emplace_back(val,tip,glob,Ndx,UND,simbol);
 }
+
+void TabelaSimbola::update_table(){
+	for(auto &sim: tabela){
+		sim.section = tabela[sim.Ndx].name;
+	}
+}
+
+void TabelaSimbola::add_simbol(uint32_t val, TabelaSimbola::sim_tip tip, bool glob, int Ndx, std::string section, std::string simbol){
+	int i;
+	i = simbol_index(simbol);
+	if(i != -1 && Ndx != 0 && tip != TabelaSimbola::SCTN){
+		std::cerr << "Greska: redefinicija simbola " << simbol << std::endl;
+		exit(1);
+	}
+	else if(Ndx != 0 && tip != TabelaSimbola::SCTN) tabela.emplace_back(val,tip,glob,0,section,simbol);
+}
+
+void TabelaSimbola::add_section(uint32_t size, std::string name){
+	int i = simbol_index(name);
+	if(i != -1){
+		tabela[i].value += size;
+	}
+	else tabela.emplace_back(size, TabelaSimbola::SCTN, false, 0, name, name);
+}
+
+void TabelaSimbola::sortiraj(){
+	std::sort(tabela.begin(), tabela.end());
+	tabela.insert(tabela.begin(), {0,NOTYP,false,0,UND,UND});
+}
+
 
 std::ostream& operator<<(std::ostream& os, TabelaSimbola& ts){
-	os << "#.symtab\n";
-	os << "Num\tValue\t\tType\tBind\tSection\tName\n";
+	os << std::left << "#.symtab" << std::endl;
+	os << std::setfill(' ');
+	os << std::setw(8) << "Num" << std::setw(13) << "Value" << std::setw(10) << "Type" << std::setw(10) << "Bind" << std::setw(10) << "Ndx" << std::setw(20) << "Name" << std::endl;
 	int i=0;
 	for(auto &sim: ts.tabela){
-		os << i++ << ':' << '\t' << to_hex_8(sim.value) << '\t';
+		os << std::setw(8) << std::to_string(i++) + ":" << std::setw(13) << to_hex_8(sim.value) << std::setw(10);
 		switch(sim.type){
 			case TabelaSimbola::NOTYP : 
 				os << "NOTYP";
@@ -65,8 +66,11 @@ std::ostream& operator<<(std::ostream& os, TabelaSimbola& ts){
 			case TabelaSimbola::SCTN : 
 				os << "SCTN";
 				break;
+			case TabelaSimbola::SIM : 
+				os << "SIM";
+				break;
 		}
-		os << '\t' << ((sim.global) ? "GLOB" : "LOC") << '\t' << ((sim.section == UND) ? "UND" : sim.section) << '\t' << sim.name << std::endl;
+		os << std::setw(10) << ((sim.global) ? "GLOB" : "LOC") << std::setw(10) << ((ts.simbol_index(sim.section) == -1) ? 0 : ts.simbol_index(sim.section)) << std::setw(20) << sim.name << std::endl;
 	}
 	return os;
 }

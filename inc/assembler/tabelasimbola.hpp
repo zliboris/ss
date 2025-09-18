@@ -6,14 +6,13 @@
 #include <vector>
 
 #define UND ""
-#define EQU_SIM " "
 
 class Assembler;
 
 class TabelaSimbola {
 	public:
 
-	enum sim_tip {NOTYP = 1, SCTN = 0};
+	enum sim_tip {NOTYP = 1, SCTN = 0, SIM = 2};
 
 	int simbol_index(std::string name);
 
@@ -30,6 +29,8 @@ class TabelaSimbola {
 	void add_label(std::string name);
 
 	void add_simbol(std::string name, std::string sekcija);
+
+	void promeni_u_sim(std::string name);
 
 	void add_simbol_value(std::string name, uint32_t value);
 

@@ -129,7 +129,7 @@ direktiva :	GLOBAL	lista_simbola			{resolve_global($2);	ToggleOstream::stream() 
 %%
 
 void yyerror(const char *s) {
-    fprintf(stderr, "Parser error: %s\n", s);
+    std::cerr << "Parser error:" << s << std::endl;
     return;
 }
 

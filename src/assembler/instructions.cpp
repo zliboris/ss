@@ -31,6 +31,7 @@ void Assembler::calculate_equ(){
 			}
 			if(!failed){
 				simbol_table.add_simbol_value(it->first,value);
+				simbol_table.promeni_u_sim(it->first);
 				equ_izrazi.erase(it);
 			}
 			else it++;

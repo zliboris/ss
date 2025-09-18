@@ -1,11 +1,12 @@
 #include "../../inc/linker/elf.hpp"
+#include "../../inc/linker/tabelasimbola.hpp"
+#include "../../inc/linker/hex_print.hpp"
 
 std::istream& operator>>(std::istream& is, Elf& of) {
     std::string line;
 
     while (std::getline(is, line)) {
         if (line.rfind("#.symtab", 0) == 0) {
-            // preskoči header
             std::getline(is, line);
             while (std::getline(is, line) && !line.empty() && line[0] != '#') {
                 std::istringstream iss(line);
@@ -14,16 +15,20 @@ std::istream& operator>>(std::istream& is, Elf& of) {
 
                 uint32_t value = std::stoul(valueHex, nullptr, 16);
                 TabelaSimbola::sim_tip tip = (typeStr == "SCTN" ? TabelaSimbola::SCTN : TabelaSimbola::NOTYP);
+		if (typeStr == "SCTN") tip = TabelaSimbola::SCTN;
+		else if(typeStr == "NOTYP") tip = TabelaSimbola::NOTYP;
+		else if(typeStr == "SIM") tip = TabelaSimbola::SIM;
                 bool glob = (bindStr == "GLOB");
+		int Ndx = std::stoi(sectStr);
 
-                of.symtab.add_simbol(value, tip, glob, sectStr, nameStr);
+                of.symtab.load_simbol(value, tip, glob, Ndx, nameStr);
             }
+	    of.symtab.update_table();
 		if (!line.empty() && line[0] == '#') {
     	    	    is.seekg(-static_cast<int>(line.size()) - 1, std::ios_base::cur);
 		}
         }
         else if (line.rfind("#.", 0) == 0 && line.find("rela") == std::string::npos) {
-            // obična sekcija
             Sekcija sec;
             sec.name = line.substr(2);
             while (std::getline(is, line) && !line.empty() && line[0] != '#') {
@@ -38,11 +43,10 @@ std::istream& operator>>(std::istream& is, Elf& of) {
             if (!is) break;
             is.seekg(-static_cast<int>(line.size()) - 1, std::ios_base::cur);
         }
-        else if (line.rfind("#.rela", 0) == 0) {
-            // relokacije
+        else if (line.rfind("#.rela.", 0) == 0) {
             TabelaRelokacija tr;
-            tr.section_name = line.substr(6); // posle "#.rela"
-            std::getline(is, line); // preskoči header
+            tr.section_name = line.substr(7);
+            std::getline(is, line);
             while (std::getline(is, line) && !line.empty() && line[0] != '#') {
                 std::istringstream iss(line);
                 std::string offsetHex, sym;
@@ -59,41 +63,88 @@ std::istream& operator>>(std::istream& is, Elf& of) {
     return is;
 }
 
-std::ostream& operator<<(std::ostream& os, const Elf& of) {
-    // Symtab
-    os << "#.symtab\n";
-    os << "Num\tValue\t\tType\tBind\tSection\t\tName\n";
-    int idx = 0;
-    for (const auto& sym : of.symtab.tabela) {
-        os << idx++ << ":\t"
-           << std::setw(8) << std::setfill('0') << std::hex << sym.value << std::dec << "\t"
-           << (sym.type == TabelaSimbola::SCTN ? "SCTN" : "NOTYP") << "\t"
-           << (sym.global ? "GLOB" : "LOC") << "\t"
-           << sym.section << "\t"
-           << sym.name << "\n";
-    }
+std::ostream& operator<<(std::ostream& os, Elf& of) {
 
-    // Sekcije
-    for (const auto& sec : of.sections) {
-        os << "#." << sec.name << "\n";
-        for (size_t i = 0; i < sec.content.size(); i++) {
-            os << std::setw(2) << std::setfill('0') << std::hex
-               << (int)sec.content[i] << " ";
-            if ((i + 1) % 4 == 0) os << "\t";
-            if ((i + 1) % 8 == 0) os << "\n";
-        }
-        if (sec.content.size() % 8 != 0) os << "\n";
-    }
+	os << of.symtab;
 
-    // Relokacije
-    for (const auto& tr : of.relos) {
-        os << "#.rela." << tr.section_name << "\n";
-        os << "Offset\t\tAddend\tSymbol\n";
-        for (const auto& r : tr.tabela) {
-            os << std::setw(8) << std::setfill('0') << std::hex << r.offset << std::dec << "\t"
-               << r.addend << "\t"
-               << r.simbol << "\n";
-        }
-    }
-    return os;
+	for (auto& sec : of.sections) {
+    	    os << sec;
+	}
+
+	for (auto& tr : of.relos) {
+    	    os << tr;
+	}
+
+	return os;
+}
+
+Elf& Elf::operator+=(Elf& asm_file){
+	int idx;
+	TabelaSimbola temp = asm_file.symtab;
+	for(auto sim: asm_file.symtab.tabela){
+		if(sim.type == TabelaSimbola::SCTN){
+			if( (idx = symtab.simbol_index(sim.name)) != -1 && symtab.tabela[idx].type == TabelaSimbola::SCTN){
+				for(auto &simbol : temp.tabela){
+					if(simbol.section == sim.name && simbol.type == TabelaSimbola::NOTYP)simbol.value += symtab.tabela[idx].value;
+				}
+				for(auto sec: asm_file.sections){
+					if(sec.name == sim.name){
+						for(auto &sec_linked: sections){
+							if(sec_linked.name == sim.name){
+								sec_linked += sec;
+								break;
+							}
+						}
+						break;
+					}
+				}
+				for(auto rel: asm_file.relos){
+					if(rel.section_name == sim.name){
+						for(auto &rela: rel.tabela){
+							rela.offset += symtab.tabela[idx].value;
+						}
+						for(auto &rel_linked : relos){
+							if(rel_linked.section_name == sim.name){
+								rel_linked += rel;
+								break;
+							}
+						}
+						break;
+					}
+				}
+			}
+			else if (symtab.simbol_index(sim.name) != -1){
+				std::cerr << "Greska: redefinicija simbola :" << sim.name << std::endl;
+				exit(1);
+			}
+			else {
+				Sekcija new_sec;
+				new_sec.name = sim.name;
+				for(auto sec: asm_file.sections){
+					if(sec.name == sim.name){
+						new_sec += sec;
+						break;
+					}
+				}
+				sections.push_back(new_sec);
+
+				TabelaRelokacija new_relos;
+				new_relos.section_name = sim.name;
+				for(auto rel: asm_file.relos){
+					if(rel.section_name == sim.name){
+						new_relos += rel;
+					}
+				}
+				relos.push_back(new_relos);
+			}
+			symtab.add_section(sim.value, sim.name);
+		}
+	}
+	for(auto &sim: temp.tabela){
+		if(sim.type != TabelaSimbola::SCTN && sim.name != UND){
+			symtab.add_simbol(sim.value, sim.type, sim.global, sim.Ndx, sim.section, sim.name);
+		}
+	}
+
+	return *this;
 }

@@ -16,13 +16,16 @@
 
 class Elf {
 	public:
-    TabelaSimbola symtab;
-    std::vector<Sekcija> sections;
-    std::vector<TabelaRelokacija> relos;
+		TabelaSimbola symtab;
+		std::vector<Sekcija> sections;
+		std::vector<TabelaRelokacija> relos;
+
+		Elf& operator+=(Elf& asm_file);
 };
 
 std::istream& operator>>(std::istream& is, Elf& of);
 
-std::ostream& operator<<(std::ostream& os, const Elf& of);
+std::ostream& operator<<(std::ostream& os, Elf& of);
+
 
 #endif

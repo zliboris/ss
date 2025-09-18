@@ -1,6 +1,15 @@
 #include "../../inc/linker/sekcija.hpp"
 #include "../../inc/linker/hex_print.hpp"
 
+Sekcija& Sekcija::operator+=(Sekcija& sec){
+
+	for(auto &byte: sec.content){
+		add_byte(byte);
+	}
+
+	return *this;
+}
+
 std::ostream& operator<<(std::ostream& os, Sekcija& s){
 	os << "#." << s.name << std::endl;
 	int i = 0;
@@ -23,3 +32,4 @@ std::ostream& operator<<(std::ostream& os, Sekcija& s){
 		os << std::endl;
 	return os;
 }
+

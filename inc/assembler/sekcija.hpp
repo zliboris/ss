@@ -58,7 +58,7 @@ class Sekcija {
 
 	void fix_relokacije();
 
-	uint32_t get_total_size(){return offset + Tliterali.tabela.size();}
+	uint32_t get_total_size(){return get_binary().size();}
 
 	TabelaRelokacija Trelokacija;
 

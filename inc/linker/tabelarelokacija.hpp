@@ -20,6 +20,8 @@ class TabelaRelokacija{
 	std::string section_name;
 
 	std::vector<relokacija> tabela;
+
+	TabelaRelokacija& operator+=(TabelaRelokacija& tabRela);
 };
 
 std::ostream& operator<<(std::ostream& os, TabelaRelokacija& tr);

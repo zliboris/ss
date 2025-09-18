@@ -78,11 +78,17 @@ void TabelaSimbola::add_simbol(std::string name, std::string sekcija){
 void TabelaSimbola::add_simbol_value(std::string name, uint32_t value){
 	int i = simbol_index(name);
 	if(i == -1){
-		tabela.emplace_back(value, NOTYP, false, EQU_SIM, name);
+		tabela.emplace_back(value, SIM, false, Assembler::assembler.get_curr_section().name, name);
 	}
 	else{
 		tabela[i].value = value;
 	}
+}
+
+void TabelaSimbola::promeni_u_sim(std::string name){
+	int i = simbol_index(name);
+	if(i == -1)return;
+	tabela[i].type = SIM;
 }
 
 void TabelaSimbola::sortiraj(){
@@ -91,11 +97,12 @@ void TabelaSimbola::sortiraj(){
 }
 
 std::ostream& operator<<(std::ostream& os, TabelaSimbola& ts){
-	os << "#.symtab\n";
-	os << "Num\tValue\t\tType\tBind\tSection\t\tName\n";
+	os << std::left << "#.symtab" << std::endl;
+	os << std::setfill(' ');
+	os << std::setw(8) << "Num" << std::setw(13) << "Value" << std::setw(10) << "Type" << std::setw(10) << "Bind" << std::setw(10) << "Ndx" << std::setw(20) << "Name" << std::endl;
 	int i=0;
 	for(auto &sim: ts.tabela){
-		os << i++ << ':' << '\t' << to_hex_8(sim.value) << '\t';
+		os << std::setw(8) << std::to_string(i++) + ":" << std::setw(13) << to_hex_8(sim.value) << std::setw(10);
 		switch(sim.type){
 			case TabelaSimbola::NOTYP : 
 				os << "NOTYP";
@@ -103,8 +110,11 @@ std::ostream& operator<<(std::ostream& os, TabelaSimbola& ts){
 			case TabelaSimbola::SCTN : 
 				os << "SCTN";
 				break;
+			case TabelaSimbola::SIM : 
+				os << "SIM";
+				break;
 		}
-		os << '\t' << ((sim.global) ? "GLOB" : "LOC") << '\t' << ((sim.section == UND) ? "UND" : sim.section) << "\t\t" << sim.name << std::endl;
+		os << std::setw(10) << ((sim.global) ? "GLOB" : "LOC") << std::setw(10) << ((ts.simbol_index(sim.section) == -1) ? 0 : ts.simbol_index(sim.section)) << std::setw(20) << sim.name << std::endl;
 	}
 	return os;
 }

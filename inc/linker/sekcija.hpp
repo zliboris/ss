@@ -14,8 +14,11 @@ class Sekcija{
 
 	void add_byte(uint8_t byte){content.push_back(byte);}
 
+	Sekcija& operator+=(Sekcija& sec);
+
 };
 
 std::ostream& operator<<(std::ostream& os, Sekcija& s);
+
 
 #endif

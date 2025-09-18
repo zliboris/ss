@@ -13,10 +13,11 @@ void TabelaRelokacija::add_sekcija_offset(uint32_t offset_sekcije){
 
 std::ostream& operator<<(std::ostream& os, TabelaRelokacija& tr){
 	os << "#.rela." << tr.section_name << std::endl;
-	os << "Offset\t\tAddend\tSymbol\n";
+	os << std::setfill(' ') << std::left;
+	os << std::setw(12) << "Offset" << std::setw(10) << std::left << "Addend" << std::setw(10) << "Symbol" << std::endl;
 	for(auto &r: tr.tabela){
-		os << to_hex_8(r.offset);
-		os << '\t' << r.addend << '\t' << r.simbol << std::endl;
+		os << std::setw(12) << to_hex_8(r.offset);
+		os << std::setw(10) << r.addend << std::setw(10) << r.simbol << std::endl;
 	}
 	return os;
 }
